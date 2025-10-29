@@ -4,56 +4,55 @@ function parseTweets(runkeeper_tweets) {
 		window.alert('No tweets returned');
 		return;
 	}
-	// Build an array of Tweet objects from the tweet data
+	
 	tweet_array = runkeeper_tweets.map(function(tweet) {
 		return new Tweet(tweet.text, tweet.created_at);
 	});
-	
-	// helper functions
-	const $id = (id) => document.getElementById(id);
-	const $setAll = (cls, text) =>
-    document.querySelectorAll(`.${cls}`).forEach(el => el.textContent = text);
 
-	const fmtDate = (d) =>
-    d.toLocaleDateString('en-US', {
-      weekday: 'long', month: 'long', day: 'numeric', year: 'numeric'
-    });
+	// --- helper to set all spans of a class name ---
+	function setAll(className, val) {
+		document.querySelectorAll('.' + className).forEach(e => e.textContent = val);
+	}
 
-	// total number of tweets
-	$id('numberTweets').textContent = String(tweet_array.length);
+	// total tweets
+	document.getElementById('numberTweets').textContent = tweet_array.length.toString();
 
-	// earliest and latest tweet dates
-	const times = tweet_array.map(t => t.time.getTime());
-	const firstDate = new Date(Math.min(...times));
-	const lastDate  = new Date(Math.max(...times));
-	$id('firstDate').textContent = fmtDate(firstDate);
-	$id('lastDate').textContent  = fmtDate(lastDate);
+	// find earliest and latest tweets
+	let first = tweet_array[0].time, last = tweet_array[0].time;
+	for (let t of tweet_array) {
+		if (t.time < first) first = t.time;
+		if (t.time > last) last = t.time;
+	}
+	document.getElementById('firstDate').textContent = first.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+	document.getElementById('lastDate').textContent = last.toLocaleDateString('en-US', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
 
-	// --- counts by category ---
-	const counts = { completed_event: 0, live_event: 0, achievement: 0, misc: 0 };
-	tweet_array.forEach(t => counts[t.source] = (counts[t.source] || 0) + 1);
+	// --- categorize ---
+	const counts = { completed_event: 0, live_event: 0, achievement: 0, miscellaneous: 0 };
+	for (let t of tweet_array) {
+		if (t.source && counts.hasOwnProperty(t.source)) {
+			counts[t.source]++;
+		}
+	}
 
-	// write raw counts (classes may appear multiple times in HTML)
-	$setAll('completedEvents', counts.completed_event);
-	$setAll('liveEvents', counts.live_event);
-	$setAll('achievements', counts.achievement);
-	$setAll('miscellaneous', counts.misc);
+	function pct(n) {
+		return ((n / tweet_array.length) * 100).toFixed(2) + '%';
+	}
 
-	// --- percentages by category (of ALL tweets) ---
-	const total = tweet_array.length || 1; // guard
-	const pct = (num, den = total) =>
-		math.format((num / (den || 1)) * 100, { notation: 'fixed', precision: 2 }) + '%';
+	// update counts + percents
+	setAll('completedEvents', counts.completed_event);
+	setAll('completedEventsPct', pct(counts.completed_event));
+	setAll('liveEvents', counts.live_event);
+	setAll('liveEventsPct', pct(counts.live_event));
+	setAll('achievements', counts.achievement);
+	setAll('achievementsPct', pct(counts.achievement));
+	setAll('miscellaneous', counts.miscellaneous);
+	setAll('miscellaneousPct', pct(counts.miscellaneous));
 
-	$setAll('completedEventsPct',  pct(counts.completed_event));
-	$setAll('liveEventsPct',       pct(counts.live_event));
-	$setAll('achievementsPct',     pct(counts.achievement));
-	$setAll('miscellaneousPct',    pct(counts.misc));
-
-	// --- user-written among completed events ---
+	// --- user-written completed tweets ---
 	const completed = tweet_array.filter(t => t.source === 'completed_event');
-	const writtenCompleted = completed.filter(t => t.written);
-	$setAll('written', String(writtenCompleted.length));
-	$setAll('writtenPct', pct(writtenCompleted.length, completed.length));	
+	const written = completed.filter(t => t.written);
+	setAll('written', written.length);
+	setAll('writtenPct', ((written.length / completed.length) * 100).toFixed(2) + '%');
 }
 
 //Wait for the DOM to load

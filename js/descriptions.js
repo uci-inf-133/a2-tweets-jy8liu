@@ -5,15 +5,13 @@ function parseTweets(runkeeper_tweets) {
 		return;
 	}
 
-	//TODO: Filter to just the written tweets
-	// Keep original index for a stable "tweet number"
-	window.__writtenRunningTweets__ = runkeeper_tweets
+	// Filter to all user-written tweets (any activity)
+	window.__writtenTweets__ = runkeeper_tweets
 		.map((tw, idx) => ({ t: new Tweet(tw.text, tw.created_at), idx }))
-		.filter(({ t }) => t.activityType === 'run' && t.written === true);
+		.filter(({ t }) => t.written === true);
 }
 
 function addEventHandlerForSearch() {
-	//TODO: Search the written tweets as text is entered into the search box, and add them to the table
 	const input = document.getElementById('textFilter');
 	const tbody = document.getElementById('tweetTable');
 	const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -36,7 +34,7 @@ function addEventHandlerForSearch() {
 	};
 
 	const render = () => {
-		const base = window.__writtenRunningTweets__ || [];
+		const base = window.__writtenTweets__ || [];
 		const q = (input.value || '').trim();
 		setTxt('searchText', q);
 		tbody.innerHTML = '';
@@ -47,13 +45,15 @@ function addEventHandlerForSearch() {
 		}
 
 		const qLower = q.toLowerCase();
-		const matches = base.filter(({ t }) => (t.writtenText || '').toLowerCase().includes(qLower));
+		const matches = base.filter(({ t }) =>
+			(t.writtenText || '').toLowerCase().includes(qLower)
+		);
 
 		setTxt('searchCount', String(matches.length));
 		tbody.innerHTML = matches.map(({ t, idx }) => buildRow(idx + 1, t)).join('');
 	};
 
-	// Update after every character
+	// Update after every character typed
 	input.addEventListener('input', render);
 
 	// Initial clear
