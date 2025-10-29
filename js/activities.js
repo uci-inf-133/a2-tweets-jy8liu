@@ -73,7 +73,7 @@ function parseTweets(runkeeper_tweets) {
     mark: 'bar',
     encoding: {
       x: { field: 'type', type: 'nominal', title: 'Activity Type', sort: '-y' },
-      y: { field: 'count', type: 'quantitative', title: 'Tweets (completed with distance)' },
+      y: { field: 'count', type: 'quantitative', title: 'Tweets per Activity' },
       tooltip: [{ field: 'type', type: 'nominal' }, { field: 'count', type: 'quantitative' }]
     }
   };
