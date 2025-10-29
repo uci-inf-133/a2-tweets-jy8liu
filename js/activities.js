@@ -23,18 +23,18 @@ function parseTweets(runkeeper_tweets) {
   // Distance-based rows (ignore time-only activities like yoga → distance=0)
   const distanceRows = rows.filter(r => r.distance > 0);
 
-  // ===== Top-level stats for the page =====
-  // Unique activity types among distance-based (exclude 'other' so the count reflects meaningful types)
+  //stats for the page
+  //unique activity types among distance-based; exclude other
   const uniqueTypes = Array.from(new Set(distanceRows.map(r => r.type).filter(t => t !== 'other')));
 
   const setTxt = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
   setTxt('numberActivities', String(uniqueTypes.length));
 
-  // Frequency by type (distance-based)
+  //frequency by type (distance-based)
   const counts = distanceRows.reduce((m, r) => (m[r.type] = (m[r.type] || 0) + 1, m), {});
   const countData = Object.keys(counts).map(type => ({ type, count: counts[type] }));
 
-  // Top 3 types by frequency (skip 'other' if present)
+  //top 3 types by frequency (skip 'other' if present)
   const top3 = Object.keys(counts)
     .filter(t => t !== 'other')
     .sort((a, b) => counts[b] - counts[a])
@@ -44,7 +44,7 @@ function parseTweets(runkeeper_tweets) {
   setTxt('secondMost', top3[1] || '—');
   setTxt('thirdMost',  top3[2] || '—');
 
-  // Mean distance per activity among top3 (to answer longest/shortest)
+  //mean distance per activity among top3 (to answer longest/shortest)
   const topRows = distanceRows.filter(r => top3.includes(r.type));
   const means = top3.map(t => {
     const arr = topRows.filter(r => r.type === t);
@@ -57,7 +57,7 @@ function parseTweets(runkeeper_tweets) {
   setTxt('longestActivityType', longestType);
   setTxt('shortestActivityType', shortestType);
 
-  // Weekday vs weekend for the longest activity type (average distance)
+  //weekday vs weekend for the longest activity type (average distance)
   const isWeekend = d => (d.getDay() === 0 || d.getDay() === 6);
   const lt = topRows.filter(r => r.type === longestType);
   const wk = lt.filter(r => !isWeekend(r.date));
@@ -65,7 +65,7 @@ function parseTweets(runkeeper_tweets) {
   const avg = arr => arr.length ? arr.reduce((a,b)=>a+b.distance,0)/arr.length : 0;
   setTxt('weekdayOrWeekendLonger', (avg(we) > avg(wk)) ? 'weekends' : 'weekdays');
 
-  // ===== Chart 1: Counts by Activity (bar) =====
+  //chart 1 activity type counts
   const activity_vis_spec = {
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
     description: 'Number of completed, distance-based tweets per activity type',
@@ -82,7 +82,7 @@ function parseTweets(runkeeper_tweets) {
   // Build shared data for distance-by-day plots (top3 only)
   const distanceDataTop3 = topRows;
 
-  // ===== Chart 2 (raw points): Distance by Day of Week =====
+  //chart 2 distance by day
   const rawSpec = {
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
     data: { values: distanceDataTop3 },
@@ -99,11 +99,11 @@ function parseTweets(runkeeper_tweets) {
     }
   };
 
-  // ===== Chart 3 (aggregated mean): Distance by Day of Week (mean) =====
+  //chart 3 mean
   const aggSpec = {
     $schema: 'https://vega.github.io/schema/vega-lite/v5.json',
     data: { values: distanceDataTop3 },
-    mark: { type: 'line', point: true },
+    mark: { type: 'point' },
     encoding: {
       x: { field: 'dow', type: 'ordinal', sort: DOW, title: 'Day of Week' },
       y: { aggregate: 'mean', field: 'distance', type: 'quantitative', title: 'Mean Distance (mi)' },
