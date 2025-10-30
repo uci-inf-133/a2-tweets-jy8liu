@@ -11,7 +11,7 @@ class Tweet {
     get source():string {
         const t = this.text || "";
 
-        // Completed: common RK phrasing + obvious past-tense activity verbs
+        // Completed: common RunKeeper phrasing + obvious past-tense activity verbs
         if (
             /^Just completed\b/i.test(t) ||
             /\bcompleted a\b/i.test(t) ||
@@ -45,7 +45,7 @@ class Tweet {
         return 'miscellaneous';
     }
 
-    //returns a boolean, whether the text includes any content written by the person tweeting.
+    //returns a boolean if there is user-written text in the tweet
     get written():boolean {
         // strip trailing URL and the #RunKeeper tag
         const text = (this.text || "")
@@ -95,9 +95,9 @@ class Tweet {
         }
         const t = (this.text || "").toLowerCase();
 
-        if (/\bwalk(ing)?\b/.test(t)) return "walking";
-        if (/\b(run|running|jog|jogging)\b/.test(t)) return "running";
-        if (/\b(bike|biking|cycling|ride|rode)\b/.test(t)) return "biking";
+        if (/\bwalk(ing)?\b/.test(t)) return "walk";
+        if (/\b(run|running|jog|jogging)\b/.test(t)) return "run";
+        if (/\b(bike|biking|cycling|ride|rode)\b/.test(t)) return "bike";
         return "other";
     }
 
